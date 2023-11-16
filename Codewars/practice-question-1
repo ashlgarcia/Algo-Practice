@@ -1,1 +1,113 @@
+Codewars - 7 kyu Is my function new?
 
+Question:
+
+Write a function that returns whether it was called with the new operator.
+
+The function must return a Boolean, but due to the way new works, valueOf() will be called on your returned value before strict comparison to true/false.
+
+Examples:
+
+wasCalledWithNew().valueOf();        // false
+(new wasCalledWithNew).valueOf();    // true
+wasCalledWithNew.call({}).valueOf(); // false
+
+
+
+Sample Tests:
+
+describe('tests suite', function() {
+    const { strictEqual } = require('chai').assert;
+
+    function doTest(actual, expected) {
+        strictEqual(actual.valueOf(), expected);
+    }
+
+    it('simple call', function() {
+        doTest(wasCalledWithNew(), false);
+    });
+
+    it('new', function() {
+        doTest(new wasCalledWithNew, true);
+    });
+
+    it('inheritance', function() {
+        function Constructor() {};
+        Object.setPrototypeOf(Constructor.prototype, wasCalledWithNew.prototype);
+        const object = new Constructor;
+        doTest(wasCalledWithNew.call(object), false);
+    });
+
+    it('.call() in non-strict mode', function () {
+        doTest(wasCalledWithNew.call({}), false);
+        doTest(wasCalledWithNew.call({constructor : wasCalledWithNew}), false);
+        doTest(wasCalledWithNew.call({constructor : 'wasCalledWithNew'}), false);
+        doTest(wasCalledWithNew.call({constructor : 'abcdef'}), false);
+        doTest(wasCalledWithNew.call({constructor : new wasCalledWithNew()}), false);
+        doTest(wasCalledWithNew.call(Array), false);
+        doTest(wasCalledWithNew.call(function Constructor(){}), false);
+        doTest(wasCalledWithNew.call(wasCalledWithNew), false);
+        doTest(wasCalledWithNew.call(function wasCalledWithNew(){}), false);
+    });
+
+    it('.call() in strict mode', function() {
+        const strictCall = Function('thisArg',
+            '"use strict";\n' +
+            'return (' +
+            wasCalledWithNew.toString() +
+            '\n).call(thisArg);'
+        );
+
+        doTest(strictCall(null), false);
+        doTest(strictCall(undefined), false);
+        doTest(strictCall('wasCalledWithNew'), false);
+    });
+});
+
+
+Solution:
+
+
+function wasCalledWithNew() {
+    if (typeof this !== 'object' || this === null) {
+        // If this is not an object or null, it was not called with new
+        return false;
+    }
+
+    // Check if the prototype of the instance is the same as the function's prototype
+    return Object.getPrototypeOf(this) === wasCalledWithNew.prototype;
+}
+
+
+
+Output:
+
+Time: 806ms Passed: 4 Failed: 1 Exit Code: 1
+
+Test Results:
+
+-tests suite
+
+simple call
+
+Test Passed
+
+-new
+
+expected wasCalledWithNew{} to equal true
+
+Completed in 1ms
+
+-inheritance
+
+Test Passed
+
+- .call() in non-strict mode
+
+Test Passed
+
+- .call() in strict mode
+
+Test Passed
+
+Completed in 1ms
